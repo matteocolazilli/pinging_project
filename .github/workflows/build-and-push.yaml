@@ -31,6 +31,7 @@ jobs:
       matrix:
         machine_id: [matteo, davide]
       fail-fast: false
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,6 +41,13 @@ jobs:
         with:
           version: 'latest'
 
-      - name: Apply Kubernetes manifests for app on ${{ matrix.machine_id }}
+      - name: Apply Kubernetes manifests and trigger rollout
         run: |
           kubectl apply -f k8s/app/ -n ping-app
+          kubectl rollout restart statefulset/pinger-a -n ping-app
+          kubectl rollout restart statefulset/pinger-b -n ping-app
+
+      - name: Verify rollout status
+        run: |
+          kubectl rollout status statefulset/pinger-a -n ping-app
+          kubectl rollout status statefulset/pinger-b -n ping-app

@@ -27,6 +27,7 @@ spec:
       containers:
       - name: pinger-a
         image: matteoclz/pinger-a:latest 
+        imagePullPolicy: Always
         env:
         - name: POD_NAME
           valueFrom:
