@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-runner-deployment-MACHINE_IDENTIFIER
+  namespace: github-runner
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-runner-MACHINE_IDENTIFIER
+  template:
+    metadata:
+      labels:
+        app: github-runner-MACHINE_IDENTIFIER
+    spec:
+      serviceAccountName: github-runner-sa
+      containers:
+      - name: runner
+        image: ghcr.io/actions/actions-runner:latest
+        env:
+        - name: RUNNER_NAME
+          value: "kind-MACHINE_IDENTIFIER"
+        - name: RUNNER_WORKDIR
+          value: "/_work"
+        - name: RUNNER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-runner-secret
+              key: runner-token
+        - name: GITHUB_URL
+          value: "https://github.com/matteocolazilli/pinging_project"
+        - name: RUNNER_LABELS
+          value: "kind-MACHINE_IDENTIFIER"
+        volumeMounts:
+        - name: docker-sock
+          mountPath: /var/run/docker.sock
+        - name: runner-data
+          mountPath: /_work
+        command: ["/bin/bash"]
+        args:
+          - "-c"
+          - >
+            ./config.sh --url $GITHUB_URL
+            --token $RUNNER_TOKEN
+            --name $RUNNER_NAME
+            --labels $RUNNER_LABELS
+            --work $RUNNER_WORKDIR
+            --unattended
+            --replace &&
+            ./run.sh
+      volumes:
+      - name: docker-sock
+        hostPath:
+          path: /var/run/docker.sock
+      - name: runner-data
+        emptyDir: {}

@@ -1,0 +1,45 @@
+name: Build, Push (multi-arch) and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-pinger-a:
+    uses: ./.github/workflows/reusable-build-pinger.yaml
+    with:
+      app_name: pinger-a
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
+
+  build-pinger-b:
+    uses: ./.github/workflows/reusable-build-pinger.yaml
+    with:
+      app_name: pinger-b
+    secrets:
+      docker_username: ${{ secrets.DOCKER_USERNAME }}
+      docker_password: ${{ secrets.DOCKER_PASSWORD }}
+
+  deploy-to-clusters:
+    runs-on: ${{ fromJSON(format('["self-hosted", "kind-{0}"]', matrix.machine_id)) }}
+    needs:
+      - build-pinger-a
+      - build-pinger-b
+    strategy:
+      matrix:
+        machine_id: [matteo, davide]
+      fail-fast: false
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Apply Kubernetes manifests for app on ${{ matrix.machine_id }}
+        run: |
+          kubectl apply -f k8s/app/ -n ping-app

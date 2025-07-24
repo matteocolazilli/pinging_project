@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pinger-a
+  namespace: ping-app
+spec:
+  serviceName: "pinger-a-service"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pinger-a
+  template:
+    metadata:
+      labels:
+        app: pinger-a
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - pinger-b
+            topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: pinger-a
+        image: matteoclz/pinger-a:latest 
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: TARGET_APP
+          value: "pinger-b"
+        - name: TARGET_SERVICE
+          value: "pinger-b-service"
+        - name: PING_INTERVAL_SECONDS
+          valueFrom:
+            configMapKeyRef:
+              name: pinger-config
+              key: PING_INTERVAL_SECONDS
+        - name: PING_TIMEOUT_SECONDS
+          valueFrom:
+            configMapKeyRef:
+              name: pinger-config
+              key: PING_TIMEOUT_SECONDS
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pinger-a-service
+  namespace: ping-app
+spec:
+  clusterIP: None
+  selector:
+    app: pinger-a
