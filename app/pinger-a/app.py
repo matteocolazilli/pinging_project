@@ -34,7 +34,7 @@ def main():
 
             if latency is not None:
                 latency_ms = latency * 1000
-                print(f"Ping from {pod_name} to {target_host} ({resolved_ip}): Success, latency={latency_ms:.2f} ms",flush=True)
+                print(f"Ping from {pod_name} to {target_host} ({resolved_ip}): Success, latency: {latency_ms:.2f} ms",flush=True)
             else:
                 print(f"Ping from {pod_name} to {target_host} ({resolved_ip}): Timeout",flush=True)
 
