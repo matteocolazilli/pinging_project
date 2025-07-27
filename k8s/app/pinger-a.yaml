@@ -5,7 +5,7 @@ metadata:
   namespace: ping-app
 spec:
   serviceName: "pinger-a-service"
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: pinger-a

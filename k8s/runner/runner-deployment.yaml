@@ -32,8 +32,6 @@ spec:
         - name: RUNNER_LABELS
           value: "kind-MACHINE_IDENTIFIER"
         volumeMounts:
-        - name: docker-sock
-          mountPath: /var/run/docker.sock
         - name: runner-data
           mountPath: /_work
         command: ["/bin/bash"]
@@ -49,8 +47,5 @@ spec:
             --replace &&
             ./run.sh
       volumes:
-      - name: docker-sock
-        hostPath:
-          path: /var/run/docker.sock
       - name: runner-data
         emptyDir: {}
